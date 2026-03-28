@@ -1,209 +1,207 @@
 'use client';
-// src/app/page.tsx
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { MANAGERS } from '@/lib/teamsData';
 import styles from './page.module.css';
 
-interface ManagerScore {
-  managerId: string;
-  total: number;
-}
-
-interface ApiResponse {
-  players: Record<string, { points: number; imageUrl: string | null }>;
-  managerTotals: ManagerScore[];
+interface ApiData {
+  managerTotals: { managerId: string; total: number }[];
   updatedAt: string;
+  isDemo: boolean;
 }
 
-const MANAGER_COLORS = [
-  '#FF6B1A', '#F5C518', '#22C55E', '#3B82F6',
-  '#A855F7', '#EC4899', '#14B8A6', '#F97316', '#EF4444',
-];
+const COLORS = ['#FF6B1A','#F5C518','#22C55E','#3B82F6','#A855F7','#EC4899','#14B8A6','#F97316','#EF4444'];
 
-export default function HomePage() {
-  const [data, setData] = useState<ApiResponse | null>(null);
+export default function Home() {
+  const [data, setData] = useState<ApiData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastFetch, setLastFetch] = useState<Date | null>(null);
 
-  useEffect(() => {
-    fetch('/api/players')
-      .then((r) => r.json())
-      .then((d) => { setData(d); setLoading(false); })
-      .catch(() => setLoading(false));
+  const fetchData = useCallback(async (isManual = false) => {
+    if (isManual) setRefreshing(true);
+    try {
+      const res = await fetch('/api/players', { cache: 'no-store' });
+      const d = await res.json();
+      setData(d);
+      setLastFetch(new Date());
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   }, []);
 
-  // Build ranked list
+  useEffect(() => {
+    fetchData();
+    // Auto-refresh every 5 minutes — no cron needed!
+    const interval = setInterval(() => fetchData(), 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
+
   const ranked = [...MANAGERS]
-    .map((m) => {
-      const scoreEntry = data?.managerTotals?.find((mt) => mt.managerId === m.id);
-      return { ...m, total: scoreEntry?.total || 0 };
+    .map((m, i) => {
+      const entry = data?.managerTotals?.find(t => t.managerId === m.id);
+      return { ...m, total: entry?.total ?? 0, color: COLORS[i % COLORS.length] };
     })
-    .sort((a, b) => b.total - a.total);
+    .sort((a, b) => b.total - a.total)
+    .map((m, i) => ({ ...m, rank: i + 1 }));
 
   const top3 = ranked.slice(0, 3);
   const rest = ranked.slice(3);
-  const lastUpdated = data?.updatedAt ? new Date(data.updatedAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' }) : '—';
+
+  const timeAgo = lastFetch
+    ? `${Math.floor((Date.now() - lastFetch.getTime()) / 60000)}m ago`
+    : '—';
 
   return (
-    <div className={styles.page}>
+    <main className={styles.page}>
       {/* HEADER */}
       <header className={styles.header}>
-        <div className={styles.headerInner}>
-          <div className={styles.liveChip}>
-            <span className={styles.liveDot} />
-            LIVE · IPL 2025
-          </div>
-          <h1 className={styles.title}>Fantasy<br />Standings</h1>
-          <p className={styles.subtitle}>CREX Points System · 9 Managers</p>
-          <div className={styles.lastUpdated}>
-            Last updated: <span>{lastUpdated}</span>
-          </div>
+        <div className={styles.chips}>
+          <span className={styles.liveChip}><span className={styles.dot} />LIVE · IPL 2025</span>
+          {data?.isDemo && <span className={styles.demoChip}>⚠ DEMO MODE — Add RAPIDAPI_KEY for live data</span>}
         </div>
-        {/* Decorative cricket stumps SVG */}
-        <svg className={styles.stumps} viewBox="0 0 120 160" fill="none">
-          <rect x="10" y="20" width="8" height="130" rx="4" fill="rgba(245,197,24,0.15)" />
-          <rect x="56" y="20" width="8" height="130" rx="4" fill="rgba(245,197,24,0.2)" />
-          <rect x="102" y="20" width="8" height="130" rx="4" fill="rgba(245,197,24,0.15)" />
-          <rect x="0" y="18" width="120" height="8" rx="4" fill="rgba(245,197,24,0.25)" />
-          <rect x="0" y="6" width="120" height="8" rx="4" fill="rgba(245,197,24,0.2)" />
-        </svg>
+        <h1 className={styles.title}>Fantasy<br/>League</h1>
+        <p className={styles.sub}>CREX Points · 9 Managers · Auto-refreshes every 5 min</p>
+        <div className={styles.refreshRow}>
+          <span className={styles.updated}>Updated {timeAgo}</span>
+          <button
+            className={styles.refreshBtn}
+            onClick={() => fetchData(true)}
+            disabled={refreshing}
+          >
+            {refreshing ? '⟳ Refreshing…' : '⟳ Refresh'}
+          </button>
+        </div>
       </header>
 
-      {/* STAT ROW */}
-      <div className={styles.statRow}>
+      {/* STATS BAR */}
+      <div className={styles.statsBar}>
         {[
-          { label: 'Managers', value: '9' },
-          { label: 'Season', value: 'IPL 2025' },
-          { label: 'Points System', value: 'CREX' },
-          { label: 'Gameweek', value: loading ? '—' : 'Live' },
-        ].map((s) => (
-          <div key={s.label} className={styles.statItem}>
-            <div className={styles.statVal}>{s.value}</div>
-            <div className={styles.statLabel}>{s.label}</div>
+          ['9', 'Managers'],
+          ['IPL 2025', 'Season'],
+          ['CREX', 'Points System'],
+          [ranked[0]?.name || '—', 'Leader'],
+        ].map(([v, l]) => (
+          <div key={l} className={styles.statItem}>
+            <div className={styles.statVal}>{v}</div>
+            <div className={styles.statLbl}>{l}</div>
           </div>
         ))}
       </div>
 
-      {/* PODIUM TOP 3 */}
-      <section className={styles.podiumSection}>
-        <div className={styles.podium}>
-          {/* 2nd */}
-          {top3[1] && (
-            <Link href={`/manager/${top3[1].id}`} className={`${styles.podiumCard} ${styles.second}`}>
-              <div className={styles.podiumRank}>2</div>
-              <div className={styles.podiumAvatar} style={{ background: MANAGER_COLORS[ranked.indexOf(top3[1])] }}>
-                {top3[1].name[0]}
-              </div>
-              <div className={styles.podiumName}>{top3[1].name}</div>
-              <div className={styles.podiumTeamName}>{top3[1].teamName}</div>
-              <div className={styles.podiumPts}>{loading ? '—' : top3[1].total.toFixed(1)}</div>
-              <div className={styles.podiumPtsLabel}>pts</div>
-              <div className={styles.podiumBar} style={{ height: '80px', background: 'rgba(160,176,192,0.3)' }} />
-            </Link>
-          )}
-          {/* 1st */}
-          {top3[0] && (
-            <Link href={`/manager/${top3[0].id}`} className={`${styles.podiumCard} ${styles.first}`}>
-              <div className={styles.crown}>👑</div>
-              <div className={styles.podiumAvatar} style={{ background: MANAGER_COLORS[0], width: 72, height: 72, fontSize: 32 }}>
-                {top3[0].name[0]}
-              </div>
-              <div className={styles.podiumName}>{top3[0].name}</div>
-              <div className={styles.podiumTeamName}>{top3[0].teamName}</div>
-              <div className={styles.podiumPts} style={{ fontSize: 48, color: 'var(--gold)' }}>
-                {loading ? '—' : top3[0].total.toFixed(1)}
-              </div>
-              <div className={styles.podiumPtsLabel}>pts</div>
-              <div className={styles.podiumBar} style={{ height: '110px', background: 'linear-gradient(to top, rgba(245,197,24,0.3), transparent)' }} />
-            </Link>
-          )}
-          {/* 3rd */}
-          {top3[2] && (
-            <Link href={`/manager/${top3[2].id}`} className={`${styles.podiumCard} ${styles.third}`}>
-              <div className={styles.podiumRank}>3</div>
-              <div className={styles.podiumAvatar} style={{ background: MANAGER_COLORS[2] }}>
-                {top3[2].name[0]}
-              </div>
-              <div className={styles.podiumName}>{top3[2].name}</div>
-              <div className={styles.podiumTeamName}>{top3[2].teamName}</div>
-              <div className={styles.podiumPts}>{loading ? '—' : top3[2].total.toFixed(1)}</div>
-              <div className={styles.podiumPtsLabel}>pts</div>
-              <div className={styles.podiumBar} style={{ height: '60px', background: 'rgba(205,127,50,0.25)' }} />
-            </Link>
-          )}
-        </div>
+      {/* PODIUM */}
+      <section className={styles.podium}>
+        {/* Silver - 2nd */}
+        {top3[1] && (
+          <Link href={`/manager/${top3[1].id}`} className={`${styles.podCard} ${styles.p2}`}>
+            <div className={styles.podRank} style={{ color: '#9EB0C8' }}>2</div>
+            <div className={styles.podAvatar} style={{ background: top3[1].color }}>
+              {top3[1].name[0]}
+            </div>
+            <div className={styles.podName}>{top3[1].name}</div>
+            <div className={styles.podTeam}>{top3[1].teamName}</div>
+            <div className={styles.podPts}>
+              {loading ? <span className="skeleton" style={{display:'inline-block',width:60,height:32}} /> : top3[1].total.toFixed(0)}
+            </div>
+            <div className={styles.podPtsLbl}>pts</div>
+          </Link>
+        )}
+        {/* Gold - 1st */}
+        {top3[0] && (
+          <Link href={`/manager/${top3[0].id}`} className={`${styles.podCard} ${styles.p1}`}>
+            <div className={styles.crown}>👑</div>
+            <div className={styles.podAvatar} style={{ background: top3[0].color, width:70,height:70,fontSize:34 }}>
+              {top3[0].name[0]}
+            </div>
+            <div className={styles.podName}>{top3[0].name}</div>
+            <div className={styles.podTeam}>{top3[0].teamName}</div>
+            <div className={styles.podPts} style={{ fontSize:52,color:'var(--gold)' }}>
+              {loading ? <span className="skeleton" style={{display:'inline-block',width:80,height:44}} /> : top3[0].total.toFixed(0)}
+            </div>
+            <div className={styles.podPtsLbl}>pts</div>
+          </Link>
+        )}
+        {/* Bronze - 3rd */}
+        {top3[2] && (
+          <Link href={`/manager/${top3[2].id}`} className={`${styles.podCard} ${styles.p3}`}>
+            <div className={styles.podRank} style={{ color: '#CD7F32' }}>3</div>
+            <div className={styles.podAvatar} style={{ background: top3[2].color }}>
+              {top3[2].name[0]}
+            </div>
+            <div className={styles.podName}>{top3[2].name}</div>
+            <div className={styles.podTeam}>{top3[2].teamName}</div>
+            <div className={styles.podPts}>
+              {loading ? <span className="skeleton" style={{display:'inline-block',width:60,height:32}} /> : top3[2].total.toFixed(0)}
+            </div>
+            <div className={styles.podPtsLbl}>pts</div>
+          </Link>
+        )}
       </section>
 
       {/* FULL TABLE */}
-      <section className={styles.tableSection}>
+      <section className={styles.table}>
         <div className={styles.tableHead}>
-          <span>#</span>
-          <span>Manager</span>
-          <span>Squad</span>
-          <span>Total Pts</span>
+          <span>#</span><span>Manager</span><span>Squad</span><span>Pts</span>
         </div>
 
-        {/* Top 3 mini rows */}
         {ranked.map((m, i) => {
-          const isBottom3 = i >= ranked.length - 3;
-          const color = MANAGER_COLORS[i % MANAGER_COLORS.length];
+          const isBottom3 = m.rank >= ranked.length - 2;
           return (
             <Link
               key={m.id}
               href={`/manager/${m.id}`}
-              className={`${styles.tableRow} ${isBottom3 ? styles.bottom3 : ''}`}
+              className={`${styles.row} ${isBottom3 ? styles.rowBottom : ''}`}
               style={{ animationDelay: `${i * 0.05}s` }}
             >
-              <div className={styles.rankCell}>
-                <span className={styles.rankNum} style={{ color: i < 3 ? 'var(--gold)' : 'var(--text-muted)' }}>
-                  {i + 1}
-                </span>
-              </div>
-              <div className={styles.managerCell}>
-                <div className={styles.tableAvatar} style={{ background: color }}>
-                  {m.name[0]}
-                </div>
+              <span className={styles.rowRank} style={{ color: m.rank <= 3 ? 'var(--gold)' : 'var(--muted)' }}>
+                {m.rank}
+              </span>
+              <div className={styles.rowManager}>
+                <div className={styles.rowAvatar} style={{ background: m.color }}>{m.name[0]}</div>
                 <div>
-                  <div className={styles.managerName}>
+                  <div className={styles.rowName}>
                     {m.name}
-                    {i === 0 && <span className={styles.badge} style={{ background: 'rgba(245,197,24,0.15)', color: 'var(--gold)', border: '1px solid rgba(245,197,24,0.3)' }}>👑 LEADER</span>}
-                    {isBottom3 && <span className={styles.badge} style={{ background: 'rgba(239,68,68,0.1)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.2)' }}>VC 2×</span>}
+                    {m.rank === 1 && <span className={styles.badge} style={{background:'rgba(245,197,24,.12)',color:'var(--gold)',border:'1px solid rgba(245,197,24,.25)'}}>👑 Leader</span>}
+                    {isBottom3 && <span className={styles.badge} style={{background:'rgba(239,68,68,.1)',color:'var(--red)',border:'1px solid rgba(239,68,68,.2)'}}>VC 2×</span>}
                   </div>
-                  <div className={styles.managerSub}>{m.teamName}</div>
+                  <div className={styles.rowSub}>{m.teamName}</div>
                 </div>
               </div>
-              <div className={styles.squadCell}>
-                <span>{m.players.length} players</span>
-              </div>
-              <div className={styles.ptsCell}>
-                <span className={styles.ptsVal}>{loading ? <span className="skeleton" style={{ display: 'inline-block', width: 50, height: 24 }} /> : m.total.toFixed(1)}</span>
+              <div className={styles.rowSquad}>{m.players.length} players</div>
+              <div className={styles.rowPts}>
+                {loading
+                  ? <span className="skeleton" style={{display:'inline-block',width:48,height:26}} />
+                  : <span>{m.total.toFixed(0)}</span>
+                }
               </div>
             </Link>
           );
         })}
 
         <div className={styles.bottom3Note}>
-          <span style={{ color: 'var(--red)', fontWeight: 700 }}>⚠ Bottom 3:</span> Vice-Captain boosted to 2× for next 16 games
+          <strong style={{color:'var(--red)'}}>⚠ Bottom 3:</strong> Vice-Captain boosted to 2× for next 16 games
         </div>
       </section>
 
-      {/* RULES QUICK REF */}
-      <section className={styles.rulesSection}>
-        <h2 className={styles.rulesTitle}>League Rules</h2>
+      {/* RULES */}
+      <section className={styles.rules}>
+        <h2 className={styles.rulesH}>League Rules</h2>
         <div className={styles.rulesGrid}>
           {[
-            { icon: '👥', title: 'Squad', desc: 'Min 3 BAT · 3 BOWL · 3 AR · 1 WK · Max 6 BAT · Budget ₹200Cr' },
-            { icon: '🃏', title: 'RTM Cards', desc: '2 RTM cards each. Chit draw between all RTM users + highest bidder.' },
-            { icon: '🔄', title: 'C/VC Rotation', desc: 'Change Captain & Vice-Captain every 16 games. C=2× · VC=1.5×' },
-            { icon: '⚡', title: 'Super 3× Player', desc: 'Once with a BAT, once with a BOWL — earns 3× points for one week.' },
-            { icon: '📉', title: 'Bottom 3 Rule', desc: 'After every 16 games, bottom 3 get VC boosted to 2× next round.' },
-          ].map((r) => (
-            <div key={r.title} className={styles.ruleCard}>
-              <span className={styles.ruleIcon}>{r.icon}</span>
+            ['👥','Squad','Min 3 BAT · 3 BOWL · 3 AR · 1 WK · Max 6 BAT · Budget ₹200Cr'],
+            ['🃏','RTM Cards','2 RTM cards each. Chit draw between all RTM users + highest bidder.'],
+            ['🔄','C/VC Rotation','Change C & VC every 16 games. Captain=2× · Vice-Captain=1.5×'],
+            ['⚡','Super 3×','Once with BAT, once with BOWL — earns 3× points for one week.'],
+            ['📉','Bottom 3','After 16 games, bottom 3 get VC boosted to 2× for next round.'],
+          ].map(([icon, title, desc]) => (
+            <div key={title} className={styles.ruleCard}>
+              <span className={styles.ruleIcon}>{icon}</span>
               <div>
-                <div className={styles.ruleTitle}>{r.title}</div>
-                <div className={styles.ruleDesc}>{r.desc}</div>
+                <div className={styles.ruleTitle}>{title}</div>
+                <div className={styles.ruleDesc}>{desc}</div>
               </div>
             </div>
           ))}
@@ -211,8 +209,8 @@ export default function HomePage() {
       </section>
 
       <footer className={styles.footer}>
-        IPL Fantasy League 2025 · Powered by CREX Points · Built with Next.js
+        IPL Fantasy League 2025 · CREX Points · Built with Next.js · Deployed on Vercel
       </footer>
-    </div>
+    </main>
   );
 }
