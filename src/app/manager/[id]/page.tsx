@@ -19,7 +19,7 @@ interface ApiData {
 
 type PageParams = { id: string };
 
-export default function ManagerPage({ params }: { params: PageParams | Promise<PageParams> }) {
+export default function ManagerPage({ params }: { params: Promise<PageParams> }) {
   const [managerId, setManagerId] = useState<string>('');
   const [data, setData] = useState<ApiData | null>(null);
   const [loading, setLoading] = useState(true);
