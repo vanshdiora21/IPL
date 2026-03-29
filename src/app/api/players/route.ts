@@ -161,13 +161,17 @@ function buildApiResponse(totals: Map<string, number>, isDemo: boolean) {
 
   const managerTotals = MANAGERS.map(m => {
     const total = m.players.reduce((sum, p) => {
-      const pts =
+      const basePts =
         players[p.name]?.points ??
         Object.entries(players).find(([k]) =>
           k.toLowerCase().includes(p.name.split(' ').pop()!.toLowerCase())
         )?.[1]?.points ??
         0;
-      return sum + pts;
+      const isCap   = m.captain        === p.name;
+      const isVC    = m.viceCaptain    === p.name;
+      const isSuper = m.super3xPlayer  === p.name;
+      const mult = isCap ? 2 : isVC ? 1.5 : isSuper ? 3 : 1;
+      return sum + basePts * mult;
     }, 0);
     return { managerId: m.id, total };
   });
