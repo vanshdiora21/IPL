@@ -30,6 +30,7 @@ function fmt(first: string, last: string): string {
 export const MANAGERS: Manager[] = [
   {
     id: 'dharam', name: 'Dharam', teamName: "Dharam's XI",
+    captain: 'Shubman Gill', viceCaptain: 'Rohit Sharma',
     players: [
       { name: 'Romario Shepherd',      shortName: fmt('R','Shepherd'),       team:'RCB', role:'AR',   price:1.5,  crexId:'1CR',  crexSlug:'romario-shepherd' },
       { name: 'Shubman Gill',          shortName: fmt('S','Gill'),            team:'GT',  role:'BAT',  price:16.5, crexId:'1AJ',  crexSlug:'shubman-gill' },
@@ -50,6 +51,7 @@ export const MANAGERS: Manager[] = [
   },
   {
     id: 'jai', name: 'Jai', teamName: "Jai's XI",
+    captain: 'Jos Buttler', viceCaptain: 'Shreyas Iyer',
     players: [
       { name: 'Will Jacks',            shortName: fmt('W','Jacks'),           team:'MI',  role:'AR',   price:5.25, crexId:'1BR',  crexSlug:'will-jacks' },
       { name: 'Angkrish Raghuvanshi',  shortName: fmt('A','Raghuvanshi'),     team:'KKR', role:'BAT',  price:3,    crexId:'1HJ',  crexSlug:'angkrish-raghuvanshi' },
@@ -70,6 +72,7 @@ export const MANAGERS: Manager[] = [
   },
   {
     id: 'sambhav', name: 'Sambhav', teamName: "Sambhav's XI",
+    captain: 'Yashasvi Jaiswal', viceCaptain: 'Sai Sudharsan',
     players: [
       { name: 'Prasidh Krishna',       shortName: fmt('P','Krishna'),         team:'GT',  role:'BOWL', price:9.5,  crexId:'EF',   crexSlug:'prasidh-krishna' },
       { name: 'Aqib Nabi',             shortName: fmt('A','Nabi'),            team:'DC',  role:'AR',   price:8.4,  crexId:'1M',   crexSlug:'aqib-nabi' },
@@ -87,6 +90,7 @@ export const MANAGERS: Manager[] = [
   },
   {
     id: 'arhan', name: 'Arhan', teamName: "Arhan's XI",
+    captain: 'Axar Patel', viceCaptain: 'Heinrich Klaasen',
     players: [
       { name: 'Arshdeep Singh',        shortName: fmt('A','Singh'),           team:'PBKS',role:'BOWL', price:18,   crexId:'1AK',  crexSlug:'arshdeep-singh' },
       { name: 'Naman Dhir',            shortName: fmt('N','Dhir'),            team:'MI',  role:'AR',   price:5.25, crexId:'1HM',  crexSlug:'naman-dhir' },
@@ -105,6 +109,7 @@ export const MANAGERS: Manager[] = [
   },
   {
     id: 'vansh', name: 'Vansh', teamName: "Vansh's XI",
+    captain: 'Travis Head', viceCaptain: 'Phil Salt',
     players: [
       { name: 'Mohammed Shami',        shortName: fmt('M','Shami'),           team:'LSG', role:'BOWL', price:10,   crexId:'5Q',   crexSlug:'mohammed-shami' },
       { name: 'Akash Deep',            shortName: fmt('A','Deep'),            team:'KKR', role:'BOWL', price:1,    crexId:'1HC',  crexSlug:'akash-deep' },
@@ -125,6 +130,7 @@ export const MANAGERS: Manager[] = [
   },
   {
     id: 'roshan', name: 'Roshan', teamName: "Roshan's XI",
+    captain: 'KL Rahul', viceCaptain: 'Hardik Pandya',
     players: [
       { name: 'Virat Kohli',           shortName: fmt('V','Kohli'),           team:'RCB', role:'BAT',  price:21,   crexId:'C',    crexSlug:'virat-kohli' },
       { name: 'Hardik Pandya',         shortName: fmt('H','Pandya'),          team:'MI',  role:'AR',   price:16.35,crexId:'AQ',   crexSlug:'hardik-pandya' },
@@ -145,6 +151,7 @@ export const MANAGERS: Manager[] = [
   },
   {
     id: 'shaurya', name: 'Shaurya', teamName: "Shaurya's XI",
+    captain: 'Abhishek Sharma', viceCaptain: 'Suryakumar Yadav',
     players: [
       { name: 'Abhishek Sharma',       shortName: fmt('A','Sharma'),          team:'SRH', role:'AR',   price:14,   crexId:'1AL',  crexSlug:'abhishek-sharma' },
       { name: 'Mayank Markande',       shortName: fmt('M','Markande'),        team:'MI',  role:'BOWL', price:0.3,  crexId:'BK',   crexSlug:'mayank-markande' },
@@ -165,6 +172,7 @@ export const MANAGERS: Manager[] = [
   },
   {
     id: 'vibhu', name: 'Vibhu', teamName: "Vibhu's XI",
+    captain: 'Ishan Kishan', viceCaptain: 'Cameron Green',
     players: [
       { name: 'Varun Chakravarthy',    shortName: fmt('V','Chakravarthy'),    team:'KKR', role:'BOWL', price:12,   crexId:'1AV',  crexSlug:'varun-chakravarthy' },
       { name: 'Jitesh Sharma',         shortName: fmt('J','Sharma'),          team:'RCB', role:'BAT',  price:11,   crexId:'1BI',  crexSlug:'jitesh-sharma' },
@@ -184,6 +192,7 @@ export const MANAGERS: Manager[] = [
   },
   {
     id: 'aryan', name: 'Aryan', teamName: "Aryan's XI",
+    captain: 'Ruturaj Gaikwad', viceCaptain: 'Sanju Samson',
     players: [
       { name: 'Avesh Khan',            shortName: fmt('A','Khan'),            team:'LSG', role:'BOWL', price:9.75, crexId:'BJ',   crexSlug:'avesh-khan' },
       { name: 'Kartik Sharma',         shortName: fmt('K','Sharma'),          team:'CSK', role:'BAT',  price:14.2, crexId:'1LO',  crexSlug:'kartik-sharma' },
