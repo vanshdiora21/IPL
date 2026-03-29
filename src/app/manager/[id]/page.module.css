@@ -68,6 +68,13 @@
 .ptsMult { font-family:var(--f-ui); font-size:10px; font-weight:700; }
 .ptsBase { font-size:10px; color:var(--muted); }
 
+/* SECTIONS */
+.section { margin-bottom: 10px; }
+.sectionHeader { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.sectionAccent { width:4px; height:22px; border-radius:2px; flex-shrink:0; }
+.sectionTitle { font-family:var(--f-ui); font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--text2); flex:1; }
+.sectionCount { font-family:var(--f-display); font-size:13px; color:var(--muted); background:var(--bg); border:1px solid var(--border); border-radius:20px; padding:1px 9px; }
+
 /* BREAKDOWN */
 .breakdown { background:var(--bg-card); border:1px solid var(--border); border-radius:15px; padding:22px; margin-bottom:28px; }
 .breakH { font-family:var(--f-display); font-size:26px; letter-spacing:2px; color:var(--text2); margin-bottom:18px; }
