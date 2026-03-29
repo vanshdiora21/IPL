@@ -24,7 +24,7 @@ export default function ManagerPage({ params }: { params: Promise<PageParams> })
   const [data, setData] = useState<ApiData | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('ALL');
-  const [sort, setSort] = useState<'pts'|'role'|'price'>('pts');
+  const [sort, setSort] = useState<'pts'|'role'>('pts');
   const [imgErrors, setImgErrors] = useState<Set<string>>(new Set());
   const [refreshing, setRefreshing] = useState(false);
 
@@ -81,14 +81,12 @@ export default function ManagerPage({ params }: { params: Promise<PageParams> })
   });
 
   const total = enriched.reduce((s, p) => s + p.effectivePts, 0);
-  const totalSpend = manager.players.reduce((s, p) => s + p.price, 0);
   const topScorer = [...enriched].sort((a, b) => b.effectivePts - a.effectivePts)[0];
 
   const filtered = enriched
     .filter(p => filter === 'ALL' || p.role === filter)
     .sort((a, b) => {
       if (sort === 'pts') return b.effectivePts - a.effectivePts;
-      if (sort === 'price') return b.price - a.price;
       return ROLE_ORDER.indexOf(a.role as typeof ROLE_ORDER[number]) - ROLE_ORDER.indexOf(b.role as typeof ROLE_ORDER[number]);
     });
 
@@ -116,7 +114,6 @@ export default function ManagerPage({ params }: { params: Promise<PageParams> })
         <div className={styles.heroStats}>
           {[
             { val: loading ? '—' : total.toFixed(0), lbl: 'Total Points', gold: true },
-            { val: `₹${totalSpend.toFixed(1)}Cr`, lbl: 'Squad Value', gold: false },
             { val: String(manager.players.length), lbl: 'Players', gold: false },
             { val: loading ? '—' : (topScorer?.shortName?.split('. ')[1] || '—'), lbl: 'Top Scorer', gold: false },
           ].map((s, i) => (
@@ -149,9 +146,9 @@ export default function ManagerPage({ params }: { params: Promise<PageParams> })
           ))}
         </div>
         <div className={styles.sorts}>
-          {(['pts','role','price'] as const).map(s => (
+          {(['pts','role'] as const).map(s => (
             <button key={s} onClick={() => setSort(s)} className={`${styles.sBtn} ${sort===s ? styles.sActive : ''}`}>
-              {s === 'pts' ? '↓ Points' : s === 'price' ? '↓ Price' : 'By Role'}
+              {s === 'pts' ? '↓ Points' : 'By Role'}
             </button>
           ))}
         </div>
@@ -191,7 +188,6 @@ export default function ManagerPage({ params }: { params: Promise<PageParams> })
                   </div>
                   <div className={styles.pRole}>{ROLE_ICONS[p.role]} {p.role}</div>
                 </div>
-                <div className={styles.pPrice}>₹{p.price}Cr</div>
               </div>
 
               <div className={styles.pts}>
